@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>내 게임 모음</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Noto+Sans+KR:wght@300;400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{--bg:#03020f;--card:#0d0a2a;--border:rgba(255,255,255,0.07);--accent1:#40c4ff;--accent2:#e040fb;}
+  body{background:var(--bg);min-height:100vh;font-family:'Noto Sans KR',sans-serif;color:white;overflow-x:hidden;}
+  #stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+  .container{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:60px 24px 80px;}
+  header{text-align:center;margin-bottom:64px;}
+  header .label{font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:var(--accent1);opacity:0.7;margin-bottom:16px;}
+  header h1{font-family:'Orbitron',sans-serif;font-size:clamp(28px,6vw,52px);font-weight:900;line-height:1.1;background:linear-gradient(135deg,#fff 30%,var(--accent1) 70%,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:16px;}
+  header p{font-size:14px;color:rgba(255,255,255,0.4);font-weight:300;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;}
+  .card{position:relative;background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;text-decoration:none;color:white;transition:transform 0.3s ease,border-color 0.3s ease,box-shadow 0.3s ease;display:block;}
+  .card:hover{transform:translateY(-6px);border-color:rgba(255,255,255,0.2);box-shadow:0 24px 60px rgba(0,0,0,0.5);}
+  .card:hover .card-glow{opacity:1;}
+  .card:hover .play-btn{background:rgba(255,255,255,0.2);}
+  .card-glow{position:absolute;inset:0;opacity:0;transition:opacity 0.3s ease;border-radius:20px;pointer-events:none;}
+  .card.runner .card-glow{background:radial-gradient(ellipse at 50% 0%,rgba(64,196,255,0.12),transparent 70%);}
+  .card.shooter .card-glow{background:radial-gradient(ellipse at 50% 0%,rgba(224,64,251,0.12),transparent 70%);}
+  .card-preview{height:180px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+  .card.runner .card-preview{background:linear-gradient(180deg,#0a1628 0%,#061020 100%);}
+  .card.shooter .card-preview{background:linear-gradient(180deg,#0a0520 0%,#050010 100%);}
+  .runner-scene{position:relative;width:100%;height:100%;overflow:hidden;}
+  .ground{position:absolute;bottom:40px;left:0;right:0;height:2px;background:rgba(64,196,255,0.3);}
+  .runner-char{position:absolute;bottom:44px;left:50%;transform:translateX(-50%);font-size:36px;animation:run 0.5s steps(2) infinite;}
+  @keyframes run{0%{transform:translateX(-50%) scaleX(1);}50%{transform:translateX(-50%) scaleX(-1) scaleX(-1);}}
+  .obstacle{position:absolute;bottom:44px;width:20px;height:30px;background:rgba(64,196,255,0.5);border-radius:3px;animation:slide 2s linear infinite;}
+  @keyframes slide{from{right:-30px;}to{right:110%;}}
+  .obs2{animation-delay:-1.1s;height:20px;}
+  .shooter-scene{position:relative;width:100%;height:100%;overflow:hidden;}
+  .s-star{position:absolute;width:2px;height:2px;background:white;border-radius:50%;animation:fall linear infinite;}
+  @keyframes fall{from{transform:translateY(-10px);}to{transform:translateY(200px);}}
+  .s-ship{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:30px;filter:drop-shadow(0 0 8px #40c4ff);}
+  .s-enemy{position:absolute;top:20px;font-size:22px;animation:sway 2s ease-in-out infinite;}
+  @keyframes sway{0%,100%{transform:translateX(0);}50%{transform:translateX(20px);}}
+  .bullet{position:absolute;width:3px;height:14px;background:#40c4ff;border-radius:2px;left:50%;animation:shoot 0.8s linear infinite;}
+  @keyframes shoot{from{bottom:60px;opacity:1;}to{bottom:160px;opacity:0;}}
+  .card-body{padding:24px;}
+  .badge{display:inline-block;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:12px;font-weight:700;}
+  .card.runner .badge{background:rgba(64,196,255,0.15);color:var(--accent1);}
+  .card.shooter .badge{background:rgba(224,64,251,0.15);color:var(--accent2);}
+  .card-body h2{font-size:20px;font-weight:700;margin-bottom:8px;}
+  .card-body p{font-size:13px;color:rgba(255,255,255,0.45);line-height:1.7;margin-bottom:20px;}
+  .play-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);font-size:13px;font-weight:700;color:white;transition:background 0.2s;font-family:'Noto Sans KR',sans-serif;}
+  .play-btn svg{width:14px;height:14px;fill:white;}
+  footer{text-align:center;margin-top:64px;font-size:12px;color:rgba(255,255,255,0.18);letter-spacing:0.05em;}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<div class="container">
+  <header>
+    <div class="label">Game Collection</div>
+    <h1>내 게임 모음</h1>
+    <p>플레이할 게임을 선택하세요</p>
+  </header>
+  <div class="grid">
+    <a href="runner.html" class="card runner">
+      <div class="card-glow"></div>
+      <div class="card-preview">
+        <div class="runner-scene">
+          <div class="ground"></div>
+          <div class="runner-char">&#127939;</div>
+          <div class="obstacle"></div>
+          <div class="obstacle obs2"></div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="badge">Runner</div>
+        <h2>진화 러너</h2>
+        <p>시간이 지나면서 점점 더 빨라지는<br>장애물 넘기 게임</p>
+        <span class="play-btn"><svg viewBox="0 0 16 16"><path d="M3 2l11 6-11 6z"/></svg>플레이</span>
+      </div>
+    </a>
+    <a href="shooter.html" class="card shooter">
+      <div class="card-glow"></div>
+      <div class="card-preview">
+        <div class="shooter-scene">
+          <div class="s-star" style="left:15%;animation-duration:1.2s;animation-delay:0s;opacity:0.6;"></div>
+          <div class="s-star" style="left:35%;animation-duration:0.9s;animation-delay:0.3s;opacity:0.4;"></div>
+          <div class="s-star" style="left:60%;animation-duration:1.5s;animation-delay:0.1s;opacity:0.7;"></div>
+          <div class="s-star" style="left:80%;animation-duration:1.1s;animation-delay:0.6s;opacity:0.5;"></div>
+          <div class="s-star" style="left:50%;animation-duration:1.3s;animation-delay:0.9s;opacity:0.3;"></div>
+          <div class="s-enemy" style="left:30%;">&#128126;</div>
+          <div class="s-enemy" style="left:55%;animation-delay:-1s;">&#128126;</div>
+          <div class="bullet"></div>
+          <div class="s-ship">&#9992;&#65039;</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="badge">Shooter</div>
+        <h2>하늘의 전사</h2>
+        <p>적을 격추하고 보스를 처치하는<br>우주 비행기 슈팅 게임</p>
+        <span class="play-btn"><svg viewBox="0 0 16 16"><path d="M3 2l11 6-11 6z"/></svg>플레이</span>
+      </div>
+    </a>
+  </div>
+  <footer>pangpang-01 · 내 게임 모음</footer>
+</div>
+<script>
+const cv=document.getElementById('stars');
+const cx=cv.getContext('2d');
+let W,H,stars=[];
+function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+function initStars(){stars=Array.from({length:150},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.2+0.2,sp:Math.random()*0.3+0.1,tw:Math.random()*6.28}));}
+function drawStars(){
+  cx.clearRect(0,0,W,H);
+  stars.forEach(s=>{
+    s.y+=s.sp;s.tw+=0.02;
+    if(s.y>H){s.y=0;s.x=Math.random()*W;}
+    cx.fillStyle='rgba(255,255,255,'+(0.2+Math.sin(s.tw)*0.2)+')';
+    cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+window.addEventListener('resize',()=>{resize();initStars();});
+resize();initStars();drawStars();
+</script>
+</body>
+</html>
